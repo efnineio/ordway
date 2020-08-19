@@ -23,18 +23,18 @@ setup(
     description="A simple Ordway API wrapper.",
     long_description=LONG_DESC,
     long_description_content_type="text/markdown",
-    author="Nicholas Ramsey",
+    author="Geoffrey Doempke",
     author_email="nicholas@logram.io",
     python_requires=">=3.6",
-    url="",  # TODO
+    url="https://github.com/efnineio/ordway",  # TODO
     packages=find_packages(exclude=["tests", "tests.*", "docs"]),
     install_requires=requirements,
     extras_require={"testing": ["tox==3.17.1"]},
     project_urls={
         "Documentation": "",  # TODO
-        "Source": "",
-        "Tracker": "",
-        "Changelog": "",
+        "Source": "https://github.com/efnineio/ordway",
+        "Tracker": "https://github.com/efnineio/ordway/issues",
+        "Changelog": "https://github.com/efnineio/ordway/blob/master/CHANGES.md",
     },
     license="",
     classifiers=[
