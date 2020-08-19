@@ -12,6 +12,30 @@ pip install ordway
 
 ## Quickstart
 
+```python
+from ordway import OrdwayClient
+
+ordway = OrdwayClient(
+    email="EMAIL",
+    user_token="USER_TOKEN",
+    api_key="API_KEY",
+    company="COMPANY",
+)
+
+for payment in ordway.payments.all():
+    print(payment)
+
+for subscription in ordway.subscriptions.list(
+    page = 1, 
+    filters = { "updated_date>": "2020-01-01" }, 
+    sort="updated_date", 
+    ascending=False
+):
+    print(subscription)
+
+print(ordway.customers.get(id="CUST-01"))
+```
+
 ## Documentation
 
 ## License
