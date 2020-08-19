@@ -102,7 +102,7 @@ class OrdwayClient:
         except KeyError:
             err_message = "Cannot instantiate `OrdwayClient` with `.from_env`. Must set all of the following env vars: `ORDWAY_EMAIL`, `ORDWAY_API_KEY`, `ORDWAY_COMPANY`, and `ORDWAY_USER_TOKEN`."
 
-            logger.fatal(err_message)
+            logger.error(err_message)
 
             raise OrdwayClientException(err_message)
 
