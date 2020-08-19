@@ -193,4 +193,3 @@ __all__ = [
     "UpdateAPIMixin",
     "DeleteAPIMixin",
 ]
-
