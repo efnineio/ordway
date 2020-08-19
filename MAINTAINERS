@@ -1,0 +1,15 @@
+{
+    "version": 1,
+    "people": [
+        {
+            "github": "efnineio",
+            "email": null,
+            "name": "Geoffrey Doempke"
+        },
+        {
+            "github": "nicholas-ramsey",
+            "email": "nicholas@logram.io",
+            "name": "Nicholas Ramsey"
+        }
+    ]
+}
