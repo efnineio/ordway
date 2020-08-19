@@ -1,0 +1,31 @@
+name: Continuous Integration
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
+jobs:
+    tests:
+        runs-on: ubuntu-18.04
+        strategy:
+            matrix:
+              python: [3.6, 3.7, 3.8]
+        steps:
+            - uses: actions/checkout@v2
+            - name: "Setup Python"
+              uses: actions/setup-python@v2
+              with:
+                python-version: ${{ matrix.python }}
+            - name: "Build Test Environment"
+              run: |
+                python3 -m pip install --upgrade pip setuptools
+                python3 -m pip install . .[testing]
+            - name: "Run Format Checker"
+              run: tox -e format
+            - name: "Run Unit/Integration Tests"
+              # Will skip dist if not installed, so will only execute once
+              run: tox -e py36, py37, py38
+            - name: "Run MyPy"
+              run: tox -e type
