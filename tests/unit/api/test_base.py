@@ -21,17 +21,35 @@ class TestAPIBase(APITestCase):
             },
         )
 
+    def test_get_request_calls_request(self):
+        self.mocked_response().json.return_value = {}
+
+        response = self.api_base._get_request("test")
+
+        self.assertDictEqual(response, {})
+
+    def test_post_request_raises_value_error_without_data_and_json(self):
+        with self.assertRaises(ValueError):
+            self.api_base._post_request("test")
+
+    def test_post_request_calls_request(self):
+        self.mocked_response().json.return_value = {}
+
+        response = self.api_base._post_request("test", json={})
+
+        self.assertDictEqual(response, {})
+
     def test_request_raises_ordway_api_exception_on_request_exception(self):
         self.mocked_response.side_effect = RequestException
 
         with self.assertRaises(OrdwayAPIRequestException):
-            self.api_base.request("GET", "test")
+            self.api_base._request("GET", "test")
 
     def test_request_raises_ordway_api_exception_on_value_error(self):
         self.mocked_response().json.side_effect = ValueError
 
         with self.assertRaises(OrdwayAPIRequestException):
-            self.api_base.request("GET", "test")
+            self.api_base._request("GET", "test")
 
 
 class TestRemovOrderFromSort(TestCase):
@@ -68,7 +86,7 @@ class TestListMixin(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.get_request_patcher = patch("ordway.api.base.APIBase.get_request")
+        self.get_request_patcher = patch("ordway.api.base.APIBase._get_request")
         self.mocked_get_request = self.get_request_patcher.start()
 
         self.list_api_mixin = ListAPIMixin(self.client)
@@ -141,7 +159,7 @@ class TestGetMixin(APITestCase):
     def setUp(self):
         super().setUp()
 
-        self.get_request_patcher = patch("ordway.api.base.APIBase.get_request")
+        self.get_request_patcher = patch("ordway.api.base.APIBase._get_request")
         self.mocked_get_request = self.get_request_patcher.start()
 
         self.get_api_mixin = GetAPIMixin(self.client)
