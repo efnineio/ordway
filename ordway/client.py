@@ -15,6 +15,7 @@ from .api import (
     Credits,
     Refunds,
     Plans,
+    Webhooks,
 )
 
 logger = getLogger(__name__)
@@ -59,6 +60,7 @@ class OrdwayClient:
         self.credits = Credits(self)
         self.plans = Plans(self)
         self.refunds = Refunds(self)
+        self.webhooks = Webhooks(self)
 
     @property
     def api_version(self):
