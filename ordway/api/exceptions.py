@@ -26,7 +26,7 @@ class OrdwayAPIRequestException(OrdwayAPIException, RequestException):
                     self.errors = response_json.get("errors")
                 except ValueError:
                     pass
-        
+
         if self.errors is not None:
             args = (self.errors, *args)
 
