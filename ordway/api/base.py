@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
+_Response = Union[List[Dict[str, Any]], Dict[str, Any]]
+
 
 class APIBase:
     collection: str
@@ -31,14 +33,14 @@ class APIBase:
         }
 
     # TODO May want to make static, or separate.
-    def request(
+    def _request(
         self,
         method: str,
         endpoint: str,
         params: Optional[Dict] = None,
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:  # TODO Be more specific here
+    ) -> _Response:  # TODO Be more specific here
         url = f"{API_ENDPOINT_BASE}/v{self.client.api_version}/{endpoint}"
 
         logger.debug(
@@ -59,17 +61,29 @@ class APIBase:
 
             return response.json()
         except RequestException as err:
-            raise OrdwayAPIRequestException(request=err.request, response=err.response)
+            raise OrdwayAPIRequestException(
+                str(err), request=err.request, response=err.response
+            )
         except ValueError:
             # TODO Insert repo link
             raise OrdwayAPIRequestException(
                 "Ordway returned HTTP success, but no valid JSON was present. Please report this as an issue on GitHub."
             )
 
-    def get_request(
-        self, endpoint: str, params: Optional[Dict] = None
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        return self.request("GET", endpoint, params=params)
+    def _get_request(self, endpoint: str, params: Optional[Dict] = None) -> _Response:
+        return self._request("GET", endpoint, params=params)
+
+    def _post_request(
+        self,
+        endpoint: str,
+        data: Optional[Dict] = None,
+        json: Optional[Dict] = None,
+        params: Optional[Dict] = None,
+    ) -> _Response:
+        if json is None and data is None:
+            raise ValueError("Either `json` or `data` must be passed to post_request.")
+
+        return self._request("POST", endpoint, json=json, data=data, params=params)
 
 
 def _remove_order_from_sort(sort_str: str) -> Tuple[str, Optional[bool]]:
@@ -106,7 +120,7 @@ class ListAPIMixin(APIBase):
         if order is not None:
             ascending = order
 
-        response_json = self.get_request(
+        response_json = self._get_request(
             self.collection,
             params={
                 "size": size,
@@ -160,7 +174,7 @@ class GetAPIMixin(APIBase):
     """ Mixin for retrieving a single Ordway resource. """
 
     def get(self, id: str) -> Dict[str, Any]:
-        response_json = self.get_request(f"{self.collection}/{id}")
+        response_json = self._get_request(f"{self.collection}/{id}")
 
         if isinstance(response_json, list):
             if len(response_json) == 1:
@@ -174,7 +188,10 @@ class GetAPIMixin(APIBase):
 
 
 class CreateAPIMixin(APIBase):
-    pass
+    """ Mixin for creating a single Ordway resource. """
+
+    def create(self, json: Optional[Dict], params: Optional[Dict] = None) -> _Response:
+        return self._post_request(self.collection, json=json, data=None, params=params)
 
 
 class UpdateAPIMixin(APIBase):
@@ -182,7 +199,10 @@ class UpdateAPIMixin(APIBase):
 
 
 class DeleteAPIMixin(APIBase):
-    pass
+    """ Mixin for deleting a single Ordway resource. """
+
+    def delete(self, id: str) -> _Response:
+        return self._request("DELETE", f"{self.collection}/{id}")
 
 
 __all__ = [
