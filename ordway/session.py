@@ -6,6 +6,7 @@ from urllib3.util.retry import Retry
 if TYPE_CHECKING:
     from requests import PreparedRequest
 
+
 class TimeoutAdapter(HTTPAdapter):
     """ Adds a default timeout to request Requests. """
 
@@ -33,6 +34,7 @@ class TimeoutAdapter(HTTPAdapter):
 
         return super().send(request, *args, **kwargs)
 
+
 retry_strategy = Retry(
     total=3,
     status_forcelist=[429, 500, 502, 503, 504],
@@ -41,13 +43,10 @@ retry_strategy = Retry(
 
 timeout_retry_adapter = TimeoutAdapter(max_retries=retry_strategy)
 
-DEFAULT_HEADERS = {
-    "Accept": "application/json"
-}
+DEFAULT_HEADERS = {"Accept": "application/json"}
 
-def session_factory(
-    session: Optional[Session] = None
-) -> Session:
+
+def session_factory(session: Optional[Session] = None) -> Session:
     """ Creates or modifies `requests.Session` by attaching a timeout adapter with a retry strategy and default headers. """
 
     if session is None:

@@ -2,6 +2,7 @@ from unittest import TestCase
 from requests import Session
 from ordway.session import TimeoutAdapter, timeout_retry_adapter, session_factory
 
+
 class SessionFactoryTestCase(TestCase):
     def test_attaches_retry_adapter_for_existing_session(self):
         existing_session = Session()
@@ -14,6 +15,7 @@ class SessionFactoryTestCase(TestCase):
         new_session = session_factory()
         self.assertEqual(new_session.adapters["http://"], timeout_retry_adapter)
         self.assertEqual(new_session.adapters["https://"], timeout_retry_adapter)
+
 
 class TimeoutAdapterTestCase(TestCase):
     def test_sets_timeout(self):

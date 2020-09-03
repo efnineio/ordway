@@ -31,7 +31,7 @@ setup(
     install_requires=requirements,
     extras_require={"testing": ["tox==3.17.1"]},
     project_urls={
-        "Documentation": "https://github.com/efnineio/ordway/blob/master/README.md", 
+        "Documentation": "https://github.com/efnineio/ordway/blob/master/README.md",
         "Source": "https://github.com/efnineio/ordway",
         "Tracker": "https://github.com/efnineio/ordway/issues",
         "Changelog": "https://github.com/efnineio/ordway/blob/master/CHANGES.md",
