@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Optional, Dict, List
 from logging import getLogger
 from os import environ
-from requests import Session
 from requests.exceptions import RequestException
 
+from .session import session_factory
 from .exceptions import OrdwayClientException
 from .consts import SUPPORTED_API_VERSIONS
 from .api import (
@@ -17,6 +17,9 @@ from .api import (
     Plans,
     Webhooks,
 )
+
+if TYPE_CHECKING:
+    from requests import Session
 
 logger = getLogger(__name__)
 
@@ -33,14 +36,14 @@ class OrdwayClient:
         api_version: str = "1",
         proxies: Optional[Dict[str, str]] = None,
         headers: Optional[Dict[str, str]] = None,
-        session: Optional[Session] = None,
+        session: Optional["Session"] = None,
     ):
         self.email = email
         self.api_key = api_key
         self.company = company
         self.user_token = user_token
 
-        self.session = session if session is not None else Session()
+        self.session = session_factory(session)
         self.headers = headers
         self.proxies = proxies
 
@@ -83,6 +86,12 @@ class OrdwayClient:
             raise OrdwayClientException(
                 f'OrdwayClient does not currently support the API version "v{version}".'
             )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.session.close()
 
     @classmethod
     def from_env(cls) -> "OrdwayClient":
