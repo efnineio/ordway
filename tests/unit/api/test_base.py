@@ -108,12 +108,12 @@ class TestListMixin(APITestCase):
         self.assertDictEqual(next(results), {"test": "1"})
         self.assertDictEqual(next(results), {"test": "2"})
 
-    def test_list_raises_generator_exit_when_returned_list_is_empty(self):
+    def test_list_raises_stop_iteration_when_returned_list_is_empty(self):
         self.mocked_get_request.return_value = []
 
         results = self.list_api_mixin.list(page=1)
 
-        with self.assertRaises(GeneratorExit):
+        with self.assertRaises(StopIteration):
             next(results)
 
     def test_list_handles_single_dict_response(self):

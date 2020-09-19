@@ -65,7 +65,6 @@ class APIBase:
                 str(err), request=err.request, response=err.response
             )
         except ValueError:
-            # TODO Insert repo link
             raise OrdwayAPIRequestException(
                 "Ordway returned HTTP success, but no valid JSON was present. Please report this as an issue on GitHub."
             )
@@ -100,6 +99,7 @@ def _remove_order_from_sort(sort_str: str) -> Tuple[str, Optional[bool]]:
 class ListAPIMixin(APIBase):
     """ Mixin for retrieving a collection of Ordway resources. """
 
+    MAX_PAGE_SIZE = 50
     MAX_PAGES = 1000
 
     def list(
@@ -110,6 +110,15 @@ class ListAPIMixin(APIBase):
         filters: Optional[Dict] = None,
         ascending: bool = False,
     ) -> Generator[Dict[str, Any], None, None]:
+        if size > self.MAX_PAGE_SIZE:
+            logger.warning(
+                'Maximum page size for "%s" is %s, setting `size` to maximum.',
+                self.collection,
+                self.MAX_PAGE_SIZE,
+            )
+
+            size = self.MAX_PAGE_SIZE
+
         filters = {} if filters is None else filters
 
         # Ordway appends order onto the end of the sort string. It's best
@@ -133,12 +142,12 @@ class ListAPIMixin(APIBase):
         if isinstance(response_json, dict):
             response_json = [response_json]
 
-        if len(response_json) == 0:
-            raise GeneratorExit
-
         # Mostly for consistency's sake.
         for result in response_json:
             yield result
+
+        if len(response_json) < size:
+            self._exhausted = True
 
     def all(
         self,
@@ -150,21 +159,27 @@ class ListAPIMixin(APIBase):
     ) -> Generator[Dict[str, Any], None, None]:
         page = 1
 
+        self._exhausted = False
+
         # Maybe separate into Paginator class? Could be needed elsewhere.
         while True:
             if not ignore_max_pages and page >= self.MAX_PAGES:
                 logger.warning(
-                    f"Call to `.all()` has reached the maximum number of pages ({self.MAX_PAGES}). If this is desirable, please call with `ignore_max_pages` set to True."
+                    "Call to `.all()` has reached the maximum number of pages (%s). If this is desirable, please call with `ignore_max_pages` set to True.",
+                    self.MAX_PAGES,
                 )
 
                 break
 
-            try:
-                yield from self.list(
-                    page=page, sort=sort, filters=filters, ascending=ascending
-                )
-            except GeneratorExit:
-                # Empty page encountered.
+            yield from self.list(
+                page=page,
+                size=size,
+                sort=sort,
+                filters=filters,
+                ascending=ascending,
+            )
+
+            if self._exhausted:
                 break
 
             page += 1
