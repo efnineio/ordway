@@ -4,7 +4,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 if TYPE_CHECKING:
-    from requests import PreparedRequest
+    from requests import PreparedRequest  # pylint: disable=ungrouped-imports
 
 
 class TimeoutAdapter(HTTPAdapter):
@@ -29,7 +29,9 @@ class TimeoutAdapter(HTTPAdapter):
 
         return state
 
-    def send(self, request: "PreparedRequest", *args, **kwargs):  # pragma: no cover
+    def send(
+        self, request: "PreparedRequest", *args, **kwargs
+    ):  # pragma: no cover # pylint: disable=signature-differs
         kwargs.setdefault("timeout", self.timeout)
 
         return super().send(request, *args, **kwargs)
