@@ -34,6 +34,7 @@ class OrdwayClient:
         company: str,
         user_token: str,
         api_version: str = "1",
+        staging: bool = False,
         proxies: Optional[Dict[str, str]] = None,
         headers: Optional[Dict[str, str]] = None,
         session: Optional["Session"] = None,
@@ -55,15 +56,15 @@ class OrdwayClient:
         self.api_version = api_version
 
         # Interfaces
-        self.products = Products(self)
-        self.customers = Customers(self)
-        self.subscriptions = Subscriptions(self)
-        self.invoices = Invoices(self)
-        self.payments = Payments(self)
-        self.credits = Credits(self)
-        self.plans = Plans(self)
-        self.refunds = Refunds(self)
-        self.webhooks = Webhooks(self)
+        self.products = Products(self, staging=staging)
+        self.customers = Customers(self, staging=staging)
+        self.subscriptions = Subscriptions(self, staging=staging)
+        self.invoices = Invoices(self, staging=staging)
+        self.payments = Payments(self, staging=staging)
+        self.credits = Credits(self, staging=staging)
+        self.plans = Plans(self, staging=staging)
+        self.refunds = Refunds(self, staging=staging)
+        self.webhooks = Webhooks(self, staging=staging)
 
     @property
     def api_version(self):

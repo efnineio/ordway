@@ -1,5 +1,9 @@
 # Changes
 
+## [0.3.0] - 2020-09-21
+
+- Added support for staging enviornment by passing `staging=True` to `ordway.client.OrdwayClient`
+
 ## [0.2.0] - 2020-09-19
 
 - Added new entities:
