@@ -34,6 +34,15 @@ for subscription in ordway.subscriptions.list(
     print(subscription)
 
 print(ordway.customers.get(id="CUST-01"))
+
+ordway.customers.create(json={
+    "name": "Jason",
+    "description": "Hello",
+    "contacts": [{
+        "first_name": "Jason"
+    }],
+    ...
+})
 ```
 
 ## Documentation

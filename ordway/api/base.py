@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Generator, Union, Tuple
 from logging import getLogger
 from requests.exceptions import RequestException
-from ordway.consts import API_ENDPOINT_BASE
+from ordway.consts import API_ENDPOINT_BASE, STAGING_ENDPOINT_BASE
 
 from .exceptions import OrdwayAPIRequestException, OrdwayAPIException
 
@@ -16,9 +16,10 @@ _Response = Union[List[Dict[str, Any]], Dict[str, Any]]
 class APIBase:
     collection: str
 
-    def __init__(self, client: "OrdwayClient"):
+    def __init__(self, client: "OrdwayClient", staging: bool = False):
         self.client = client
         self.session = client.session
+        self.staging = staging
 
     def _construct_headers(self) -> Dict[str, str]:
         """ Returns a dictionary of headers Ordway always expects for API requests. """
@@ -41,7 +42,12 @@ class APIBase:
         data: Optional[Dict] = None,
         json: Optional[Dict] = None,
     ) -> _Response:  # TODO Be more specific here
-        url = f"{API_ENDPOINT_BASE}/v{self.client.api_version}/{endpoint}"
+        if self.staging:
+            base = STAGING_ENDPOINT_BASE
+        else:
+            base = API_ENDPOINT_BASE
+
+        url = f"{base}/v{self.client.api_version}/{endpoint}"
 
         logger.debug(
             'Sending a request to Ordway endpoint "%s" with the following query params: %s',
