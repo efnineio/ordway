@@ -6,7 +6,7 @@ from ordway.consts import API_ENDPOINT_BASE, STAGING_ENDPOINT_BASE
 from .exceptions import OrdwayAPIRequestException, OrdwayAPIException
 
 if TYPE_CHECKING:
-    from ordway.client import OrdwayClient
+    from ordway.client import OrdwayClient # pylint: disable=cyclic-import
 
 logger = getLogger(__name__)
 
@@ -33,15 +33,14 @@ class APIBase:
             "Content-Type": "application/json",
         }
 
-    # TODO May want to make static, or separate.
-    def _request(
+    def _request(  # pylint: disable=too-many-arguments
         self,
         method: str,
         endpoint: str,
-        params: Optional[Dict] = None,
-        data: Optional[Dict] = None,
-        json: Optional[Dict] = None,
-    ) -> _Response:  # TODO Be more specific here
+        params: Optional[Dict[str, str]] = None,
+        data: Optional[Dict[str, Any]] = None,
+        json: Optional[Dict[str, Any]] = None,
+    ) -> _Response:
         if self.staging:
             base = STAGING_ENDPOINT_BASE
         else:
@@ -69,26 +68,37 @@ class APIBase:
         except RequestException as err:
             raise OrdwayAPIRequestException(
                 str(err), request=err.request, response=err.response
-            )
-        except ValueError:
+            ) from err
+        except ValueError as err:
             raise OrdwayAPIRequestException(
                 "Ordway returned HTTP success, but no valid JSON was present. Please report this as an issue on GitHub."
-            )
+            ) from err
 
-    def _get_request(self, endpoint: str, params: Optional[Dict] = None) -> _Response:
+    def _get_request(
+        self, endpoint: str, params: Optional[Dict[str, str]] = None
+    ) -> _Response:
         return self._request("GET", endpoint, params=params)
 
     def _post_request(
         self,
         endpoint: str,
-        data: Optional[Dict] = None,
-        json: Optional[Dict] = None,
-        params: Optional[Dict] = None,
+        data: Optional[Dict[str, Any]] = None,
+        json: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, str]] = None,
     ) -> _Response:
         if json is None and data is None:
             raise ValueError("Either `json` or `data` must be passed to post_request.")
 
         return self._request("POST", endpoint, json=json, data=data, params=params)
+
+    def _put_request(
+        self,
+        endpoint: str,
+        data: Optional[Dict[str, Any]] = None,
+        json: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, str]] = None,
+    ) -> _Response:
+        return self._request("PUT", endpoint, json=json, data=data, params=params)
 
 
 def _remove_order_from_sort(sort_str: str) -> Tuple[str, Optional[bool]]:
@@ -108,14 +118,16 @@ class ListAPIMixin(APIBase):
     MAX_PAGE_SIZE = 50
     MAX_PAGES = 1000
 
-    def list(
+    def list(  # pylint: disable=too-many-arguments
         self,
         page: int,
         size: int = 20,
         sort: str = "",
-        filters: Optional[Dict] = None,
+        filters: Optional[Dict[str, Any]] = None,
         ascending: bool = False,
     ) -> Generator[Dict[str, Any], None, None]:
+        """ Retrieve a single page of resource from a collection """
+
         if size > self.MAX_PAGE_SIZE:
             logger.warning(
                 'Maximum page size for "%s" is %s, setting `size` to maximum.',
@@ -126,6 +138,7 @@ class ListAPIMixin(APIBase):
             size = self.MAX_PAGE_SIZE
 
         filters = {} if filters is None else filters
+        params: Dict[str, str] = {"size": str(size), "page": str(page), **filters}
 
         # Ordway appends order onto the end of the sort string. It's best
         # to ensure that if a user does, we remove it. Sice we're going to
@@ -135,14 +148,12 @@ class ListAPIMixin(APIBase):
         if order is not None:
             ascending = order
 
+        if len(sort.strip()) > 0:
+            params["sort"] = f"{sort} {'asc' if ascending else 'desc'}"
+
         response_json = self._get_request(
             self.collection,
-            params={
-                "size": size,
-                "page": page,
-                "sort": f"{sort} {'asc' if ascending else 'desc'}",
-                **filters,
-            },
+            params=params,
         )
 
         if isinstance(response_json, dict):
@@ -155,14 +166,16 @@ class ListAPIMixin(APIBase):
         if len(response_json) < size:
             self._exhausted = True
 
-    def all(
+    def all(  # pylint: disable=too-many-arguments
         self,
         size: int = 20,
         sort: str = "",
-        filters: Optional[Dict] = None,
+        filters: Optional[Dict[str, Any]] = None,
         ascending: bool = False,
         ignore_max_pages: bool = False,
     ) -> Generator[Dict[str, Any], None, None]:
+        """ Retrieve all resources from a collection """
+
         page = 1
 
         self._exhausted = False
@@ -195,15 +208,17 @@ class GetAPIMixin(APIBase):
     """ Mixin for retrieving a single Ordway resource. """
 
     def get(self, id: str) -> Dict[str, Any]:
+        """ Retrieve a particular resource """
+
         response_json = self._get_request(f"{self.collection}/{id}")
 
         if isinstance(response_json, list):
             if len(response_json) == 1:
                 return response_json[0]
-            else:
-                raise OrdwayAPIException(
-                    "Call to `.get_request` returned an unexpected JSON array. Please report this as an issue on GitHub."
-                )
+
+            raise OrdwayAPIException(
+                "Call to `.get_request` returned an unexpected JSON array. Please report this as an issue on GitHub."
+            )
 
         return response_json
 
@@ -211,18 +226,36 @@ class GetAPIMixin(APIBase):
 class CreateAPIMixin(APIBase):
     """ Mixin for creating a single Ordway resource. """
 
-    def create(self, json: Optional[Dict], params: Optional[Dict] = None) -> _Response:
+    def create(
+        self, json: Optional[Dict[str, Any]], params: Optional[Dict[str, str]] = None
+    ) -> _Response:
+        """ Create a new resource """
+
         return self._post_request(self.collection, json=json, data=None, params=params)
 
 
 class UpdateAPIMixin(APIBase):
-    pass
+    """ Mixin for updating a single Ordway resource. """
+
+    def update(
+        self,
+        id: str,
+        json: Optional[Dict[str, Any]] = None,
+        params: Optional[Dict[str, str]] = None,
+    ) -> _Response:
+        """ Update a resource identified by `id`. """
+
+        return self._put_request(
+            f"{self.collection}/{id}", json=json, data=None, params=params
+        )
 
 
 class DeleteAPIMixin(APIBase):
     """ Mixin for deleting a single Ordway resource. """
 
     def delete(self, id: str) -> _Response:
+        """ Delete a resource identified by `id`. """
+
         return self._request("DELETE", f"{self.collection}/{id}")
 
 
