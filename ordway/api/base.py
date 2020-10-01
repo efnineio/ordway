@@ -6,7 +6,7 @@ from ordway.consts import API_ENDPOINT_BASE, STAGING_ENDPOINT_BASE
 from .exceptions import OrdwayAPIRequestException, OrdwayAPIException
 
 if TYPE_CHECKING:
-    from ordway.client import OrdwayClient # pylint: disable=cyclic-import
+    from ordway.client import OrdwayClient  # pylint: disable=cyclic-import
 
 logger = getLogger(__name__)
 

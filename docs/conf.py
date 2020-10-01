@@ -20,6 +20,7 @@
 from os.path import abspath
 from sys import path as sys_path
 
+
 def get_version():
     BASE_DIR = abspath("../")
     sys_path.append(BASE_DIR)
@@ -27,6 +28,7 @@ def get_version():
     from ordway.__version__ import __version__
 
     return __version__
+
 
 project = "ordway"
 copyright = "2020, Nicholas Ramsey, Geoffrey Doempke"

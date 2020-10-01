@@ -4,7 +4,7 @@ from .base import (
     GetAPIMixin,
     CreateAPIMixin,
     DeleteAPIMixin,
-    UpdateAPIMixin
+    UpdateAPIMixin,
 )
 
 
