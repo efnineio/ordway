@@ -1,5 +1,9 @@
 # Ordway
 
+[![PyPi Version](https://img.shields.io/pypi/v/ordway.svg)](https://pypi.org/project/ordway)
+[![Supported Versions](https://img.shields.io/pypi/pyversions/ordway.svg)](https://pypi.org/project/ordway)
+[![MIT License](https://img.shields.io/pypi/l/ordway)](https://raw.githubusercontent.com/efnineio/ordway/v0.4.0/LICENSE)
+
 Ordway is a simple API wrapper for [Ordway](https://www.ordwaylabs.com/). It's currently in pre-alpha stage, so be wary if you decide to use this in production. Please report any issues you encounter.
 
 ## Installation

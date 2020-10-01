@@ -1,5 +1,26 @@
 # Changes
 
+## [0.4.0] - 2020-09-22
+
+- Added support for updating following entities:
+  * Products
+  * Customers
+  * Plans
+  * Coupons
+  * Subscriptions
+  * Orders
+  * Webhooks
+  * BillingSchedules
+  * RevenueRules
+  * Invoices
+  * Payments
+  * PaymentRuns
+  * Credits
+
+- Bug fixes
+  * Passing no `sort` argument to `ListAPIMixin.all` to `ListAPIMixin.list` caused an Ordway API error. 
+  * Entities added in 0.2.0 were not instantiated on the `ordway.Client`, rendering them unusable.
+
 ## [0.3.0] - 2020-09-21
 
 - Added support for staging enviornment by passing `staging=True` to `ordway.client.OrdwayClient`

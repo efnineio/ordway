@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Union
-from ordway.exceptions import OrdwayClientException
 from requests.exceptions import RequestException
+from ordway.exceptions import OrdwayClientException
 
 
 class OrdwayAPIException(OrdwayClientException):
@@ -8,9 +8,9 @@ class OrdwayAPIException(OrdwayClientException):
 
 
 class OrdwayAPIRequestException(OrdwayAPIException, RequestException):
-    def __init__(self, *args, **kwargs):
-        """ Initalizes an OrdwayAPIRequestException with `errors` object easily accessible, if returned. """
+    """ An Ordway API exception with the `errors` object easily accessible, if it was returned in API response body. """
 
+    def __init__(self, *args, **kwargs):
         self.errors: Optional[
             Dict[str, Union[int, str, Dict[str, Dict[str, str], str]]]
         ] = kwargs.pop("errors", None)

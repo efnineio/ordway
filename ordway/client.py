@@ -1,22 +1,11 @@
-from typing import TYPE_CHECKING, Optional, Dict, List
+from typing import TYPE_CHECKING, Optional, Dict
 from logging import getLogger
 from os import environ
-from requests.exceptions import RequestException
 
 from .session import session_factory
 from .exceptions import OrdwayClientException
 from .consts import SUPPORTED_API_VERSIONS
-from .api import (
-    Products,
-    Invoices,
-    Customers,
-    Subscriptions,
-    Payments,
-    Credits,
-    Refunds,
-    Plans,
-    Webhooks,
-)
+from . import api
 
 if TYPE_CHECKING:
     from requests import Session
@@ -24,10 +13,12 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
-class OrdwayClient:
+class OrdwayClient:  # pylint: disable=too-many-instance-attributes
+    """ A client for interacting with Ordway's API (https://ordwaylabs.api-docs.io). """
+
     SUPPORTED_API_VERSIONS = SUPPORTED_API_VERSIONS
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         email: str,
         api_key: str,
@@ -56,18 +47,31 @@ class OrdwayClient:
         self.api_version = api_version
 
         # Interfaces
-        self.products = Products(self, staging=staging)
-        self.customers = Customers(self, staging=staging)
-        self.subscriptions = Subscriptions(self, staging=staging)
-        self.invoices = Invoices(self, staging=staging)
-        self.payments = Payments(self, staging=staging)
-        self.credits = Credits(self, staging=staging)
-        self.plans = Plans(self, staging=staging)
-        self.refunds = Refunds(self, staging=staging)
-        self.webhooks = Webhooks(self, staging=staging)
+        self.products = api.Products(self, staging=staging)
+        self.customers = api.Customers(self, staging=staging)
+        self.subscriptions = api.Subscriptions(self, staging=staging)
+        self.invoices = api.Invoices(self, staging=staging)
+        self.payments = api.Payments(self, staging=staging)
+        self.credits = api.Credits(self, staging=staging)
+        self.plans = api.Plans(self, staging=staging)
+        self.refunds = api.Refunds(self, staging=staging)
+        self.webhooks = api.Webhooks(self, staging=staging)
+        self.journal_entries = api.JournalEntries(self, staging=staging)
+        self.payment_runs = api.PaymentRuns(self, staging=staging)
+        self.statements = api.Statements(self, staging=staging)
+        self.coupons = api.Coupons(self, staging=staging)
+        self.orders = api.Orders(self, staging=staging)
+        self.usages = api.Usages(self, staging=staging)
+        self.billing_runs = api.BillingRuns(self, staging=staging)
+        self.revenue_schedules = api.RevenueSchedules(self, staging=staging)
+        self.billing_schedules = api.BillingSchedules(self, staging=staging)
+        self.revenue_rules = api.RevenueRules(self, staging=staging)
+        self.chart_of_accounts = api.ChartOfAccounts(self, staging=staging)
 
     @property
     def api_version(self):
+        """ The currently used API version """
+
         return self._api_version
 
     @api_version.setter
@@ -83,7 +87,7 @@ class OrdwayClient:
 
         version = self.api_version
 
-        if not version in self.SUPPORTED_API_VERSIONS:
+        if version not in self.SUPPORTED_API_VERSIONS:
             raise OrdwayClientException(
                 f'OrdwayClient does not currently support the API version "v{version}".'
             )
@@ -111,12 +115,16 @@ class OrdwayClient:
                 env_vars["email"],
                 env_vars["company"],
             )
-        except KeyError:
-            err_message = "Cannot instantiate `OrdwayClient` with `.from_env`. Must set all of the following env vars: `ORDWAY_EMAIL`, `ORDWAY_API_KEY`, `ORDWAY_COMPANY`, and `ORDWAY_USER_TOKEN`."
+        except KeyError as err:
+            err_message = (
+                "Cannot instantiate `OrdwayClient` with `.from_env`."
+                "Must set all of the following env vars: `ORDWAY_EMAIL`, `ORDWAY_API_KEY`,"
+                "`ORDWAY_COMPANY`, and `ORDWAY_USER_TOKEN`."
+            )
 
             logger.error(err_message)
 
-            raise OrdwayClientException(err_message)
+            raise OrdwayClientException(err_message) from err
 
         api_version = environ.get("ORDWAY_API_VERSION")
 
