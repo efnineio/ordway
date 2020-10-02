@@ -81,7 +81,7 @@ class Payments(ListAPIMixin, GetAPIMixin, CreateAPIMixin):
         return self._put_request(f"{self.collection}/{id}/refund", json=json)
 
 
-class PaymentRuns(GetAPIMixin, CreateAPIMixin):
+class PaymentRuns(ListAPIMixin, GetAPIMixin, CreateAPIMixin):
     """Interface for interacting with Ordway Payment Runs
 
     Payment Runs are operations that automatically generate payments during a set interval.
