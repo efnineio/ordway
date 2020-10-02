@@ -3,6 +3,8 @@ on:
     push:
         branches:
             - master
+        tags:
+            - 'v*'
     pull_request:
         branches:
             - master
@@ -39,10 +41,10 @@ jobs:
                 fetch-depth: '0'
             - name: "Prepare for Publishing to PyPi"
               run: |
-                python3 -m pip install --upgrade wheel
+                python3 -m pip install --upgrade wheel setuptools
                 python3 setup.py sdist bdist_wheel
             - name: "Publish Package to PyPi"
-              uses: pypa/gh-action-pypi-publish@master
+              uses: pypa/gh-action-pypi-publish@54b39fb9371c0b3a6f9f14bb8a67394defc7a806
               with:
                 user: "__token__"
                 password: ${{ secrets.PYPI_TOKEN }}
