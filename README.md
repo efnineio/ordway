@@ -39,7 +39,7 @@ for subscription in ordway.subscriptions.list(
 
 print(ordway.customers.get(id="CUST-01"))
 
-ordway.customers.create(json={
+ordway.customers.create(data={
     "name": "Jason",
     "description": "Hello",
     "contacts": [{
