@@ -43,10 +43,10 @@ class Invoices(ListAPIMixin, GetAPIMixin):
             f"{self.collection}/{id}/reverse", json={"reversed_on": reversed_on}
         )
 
-    def refund(self, id: str, json: Dict[str, Any]):
+    def refund(self, id: str, data: Dict[str, Any]):
         """ Refund a negative invoice """
 
-        return self._put_request(f"{self.collection}/{id}/refund", json=json)
+        return self._put_request(f"{self.collection}/{id}/refund", json=data)
 
 
 class Customers(
@@ -75,10 +75,10 @@ class Payments(ListAPIMixin, GetAPIMixin, CreateAPIMixin):
             f"{self.collection}/{id}/reverse", json={"reversed_on": reversed_on}
         )
 
-    def refund(self, id: str, json: Dict[str, Any]):
+    def refund(self, id: str, data: Dict[str, Any]):
         """ Refund a payment """
 
-        return self._put_request(f"{self.collection}/{id}/refund", json=json)
+        return self._put_request(f"{self.collection}/{id}/refund", json=data)
 
 
 class PaymentRuns(ListAPIMixin, GetAPIMixin, CreateAPIMixin):
@@ -112,10 +112,10 @@ class Credits(ListAPIMixin, GetAPIMixin, CreateAPIMixin):
             f"{self.collection}/{id}/reverse", json={"reversed_on": reversed_on}
         )
 
-    def refund(self, id: str, json: Dict[str, Any]):
+    def refund(self, id: str, data: Dict[str, Any]):
         """ Refund a credit """
 
-        return self._put_request(f"{self.collection}/{id}/refund", json=json)
+        return self._put_request(f"{self.collection}/{id}/refund", json=data)
 
 
 class Refunds(ListAPIMixin, GetAPIMixin):
@@ -168,32 +168,32 @@ class Subscriptions(
 
     collection = "subscriptions"
 
-    def activate(self, id: str, json: Dict[str, Any]):
+    def activate(self, id: str, data: Dict[str, Any]):
         """ Activate a subscription """
 
-        return self._put_request(f"{self.collection}/{id}/activate", json=json)
+        return self._put_request(f"{self.collection}/{id}/activate", json=data)
 
-    def cancel(self, id: str, json: Dict[str, Any]):
+    def cancel(self, id: str, data: Dict[str, Any]):
         """ Cancel a subscription """
 
-        return self._put_request(f"{self.collection}/{id}/cancel", json=json)
+        return self._put_request(f"{self.collection}/{id}/cancel", json=data)
 
-    def renew(self, id: str, json: Dict[str, Any], callback_url: Optional[str] = None):
+    def renew(self, id: str, data: Dict[str, Any], callback_url: Optional[str] = None):
         """ Renew a subscription """
 
         params = {"callback_url": callback_url} if callback_url is not None else None
 
         return self._put_request(
-            f"{self.collection}/{id}/cancel", json=json, params=params
+            f"{self.collection}/{id}/cancel", json=data, params=params
         )
 
-    def change(self, id: str, json: Dict[str, Any], callback_url: Optional[str] = None):
+    def change(self, id: str, data: Dict[str, Any], callback_url: Optional[str] = None):
         """ Change an active subscription """
 
         params = {"callback_url": callback_url} if callback_url is not None else None
 
         return self._put_request(
-            f"{self.collection}/{id}/change", json=json, params=params
+            f"{self.collection}/{id}/change", json=data, params=params
         )
 
 
@@ -205,10 +205,10 @@ class Orders(ListAPIMixin, GetAPIMixin, CreateAPIMixin, UpdateAPIMixin):
 
     collection = "orders"
 
-    def cancel(self, id: str, json: Optional[Dict[str, Any]] = None):
+    def cancel(self, id: str, data: Optional[Dict[str, Any]] = None):
         """ Cancel an order """
 
-        return self._put_request(f"{self.collection}/{id}/cancel", json=json)
+        return self._put_request(f"{self.collection}/{id}/cancel", json=data)
 
 
 class Usages(ListAPIMixin, GetAPIMixin, CreateAPIMixin, DeleteAPIMixin):
@@ -264,11 +264,11 @@ class BillingSchedules(ListAPIMixin, GetAPIMixin, UpdateAPIMixin):
 
     collection = "billing_schedules"
 
-    def manage_prepayment_lines(self, id: str, json: Dict[str, Any]):
+    def manage_prepayment_lines(self, id: str, data: Dict[str, Any]):
         """ Manage prepaid credits, allowing addition or refund of prepaid credits """
 
         return self._put_request(
-            f"{self.collection}/{id}/manage_prepayment_lines", json=json
+            f"{self.collection}/{id}/manage_prepayment_lines", json=data
         )
 
 
