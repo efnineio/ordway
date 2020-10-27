@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any, Generator, Union, T
 from logging import getLogger
 from requests.exceptions import RequestException
 from ordway.consts import API_ENDPOINT_BASE, STAGING_ENDPOINT_BASE
+from ordway.utils import transform_datetimes
 
 from .exceptions import OrdwayAPIRequestException, OrdwayAPIException
 
@@ -45,6 +46,8 @@ class APIBase:
             base = STAGING_ENDPOINT_BASE
         else:
             base = API_ENDPOINT_BASE
+
+        json, data = transform_datetimes(json), transform_datetimes(data)
 
         url = f"{base}/v{self.client.api_version}/{endpoint}"
 
@@ -227,11 +230,11 @@ class CreateAPIMixin(APIBase):
     """ Mixin for creating a single Ordway resource. """
 
     def create(
-        self, json: Optional[Dict[str, Any]], params: Optional[Dict[str, str]] = None
+        self, data: Optional[Dict[str, Any]], params: Optional[Dict[str, str]] = None
     ) -> _Response:
         """ Create a new resource """
 
-        return self._post_request(self.collection, json=json, data=None, params=params)
+        return self._post_request(self.collection, json=data, data=None, params=params)
 
 
 class UpdateAPIMixin(APIBase):
@@ -240,13 +243,13 @@ class UpdateAPIMixin(APIBase):
     def update(
         self,
         id: str,
-        json: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, str]] = None,
     ) -> _Response:
         """ Update a resource identified by `id`. """
 
         return self._put_request(
-            f"{self.collection}/{id}", json=json, data=None, params=params
+            f"{self.collection}/{id}", json=data, data=None, params=params
         )
 
 
