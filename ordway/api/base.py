@@ -166,7 +166,7 @@ class ListAPIMixin(APIBase):
         for result in response_json:
             yield result
 
-        if len(response_json) < size:
+        if len(response_json) == 0:
             self._exhausted = True
 
     def all(  # pylint: disable=too-many-arguments
