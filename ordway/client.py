@@ -3,6 +3,7 @@ from logging import getLogger
 from os import environ
 
 from .session import session_factory
+from .utils import to_snake_case
 from .exceptions import OrdwayClientException
 from .consts import SUPPORTED_API_VERSIONS
 from . import api
@@ -12,11 +13,35 @@ if TYPE_CHECKING:
 
 logger = getLogger(__name__)
 
+DEFAULT_RATELIMITING = {"calls": 2, "period": 1}
+
 
 class OrdwayClient:  # pylint: disable=too-many-instance-attributes
     """ A client for interacting with Ordway's API (https://ordwaylabs.api-docs.io). """
 
     SUPPORTED_API_VERSIONS = SUPPORTED_API_VERSIONS
+    INTERFACES = [
+        api.Products,
+        api.Customers,
+        api.Subscriptions,
+        api.Invoices,
+        api.Payments,
+        api.Credits,
+        api.Plans,
+        api.Refunds,
+        api.Webhooks,
+        api.JournalEntries,
+        api.PaymentRuns,
+        api.Statements,
+        api.Coupons,
+        api.Orders,
+        api.Usages,
+        api.BillingRuns,
+        api.RevenueSchedules,
+        api.BillingSchedules,
+        api.RevenueRules,
+        api.ChartOfAccounts,
+    ]
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -25,10 +50,10 @@ class OrdwayClient:  # pylint: disable=too-many-instance-attributes
         company: str,
         user_token: str,
         api_version: str = "1",
-        staging: bool = False,
         proxies: Optional[Dict[str, str]] = None,
         headers: Optional[Dict[str, str]] = None,
         session: Optional["Session"] = None,
+        **kwargs,
     ):
         self.email = email
         self.api_key = api_key
@@ -46,27 +71,10 @@ class OrdwayClient:  # pylint: disable=too-many-instance-attributes
 
         self.api_version = api_version
 
-        # Interfaces
-        self.products = api.Products(self, staging=staging)
-        self.customers = api.Customers(self, staging=staging)
-        self.subscriptions = api.Subscriptions(self, staging=staging)
-        self.invoices = api.Invoices(self, staging=staging)
-        self.payments = api.Payments(self, staging=staging)
-        self.credits = api.Credits(self, staging=staging)
-        self.plans = api.Plans(self, staging=staging)
-        self.refunds = api.Refunds(self, staging=staging)
-        self.webhooks = api.Webhooks(self, staging=staging)
-        self.journal_entries = api.JournalEntries(self, staging=staging)
-        self.payment_runs = api.PaymentRuns(self, staging=staging)
-        self.statements = api.Statements(self, staging=staging)
-        self.coupons = api.Coupons(self, staging=staging)
-        self.orders = api.Orders(self, staging=staging)
-        self.usages = api.Usages(self, staging=staging)
-        self.billing_runs = api.BillingRuns(self, staging=staging)
-        self.revenue_schedules = api.RevenueSchedules(self, staging=staging)
-        self.billing_schedules = api.BillingSchedules(self, staging=staging)
-        self.revenue_rules = api.RevenueRules(self, staging=staging)
-        self.chart_of_accounts = api.ChartOfAccounts(self, staging=staging)
+        for Interface in self.INTERFACES:
+            snake_case_name = to_snake_case(Interface.__name__)
+
+            setattr(self, snake_case_name, Interface(self, **kwargs))
 
     @property
     def api_version(self):
