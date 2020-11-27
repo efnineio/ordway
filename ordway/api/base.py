@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Optional, List, Dict, Any, Generator, Union, Tuple
 from logging import getLogger
 from requests.exceptions import RequestException
+from ratelimit import limits, sleep_and_retry
 from ordway.consts import API_ENDPOINT_BASE, STAGING_ENDPOINT_BASE
 from ordway.utils import transform_datetimes
 
@@ -8,19 +9,75 @@ from .exceptions import OrdwayAPIRequestException, OrdwayAPIException
 
 if TYPE_CHECKING:
     from ordway.client import OrdwayClient  # pylint: disable=cyclic-import
+    from requests import Session
 
 logger = getLogger(__name__)
 
 _Response = Union[List[Dict[str, Any]], Dict[str, Any]]
 
 
+def _request(
+    session: "Session",
+    method: str,
+    endpoint: str,
+    api_version: str,
+    params: Optional[Dict[str, str]] = None,
+    data: Optional[Dict[str, Any]] = None,
+    json: Optional[Dict[str, Any]] = None,
+    staging: bool = False,
+    headers: Dict[str, str] = {},
+):
+    if staging:
+        base = STAGING_ENDPOINT_BASE
+    else:
+        base = API_ENDPOINT_BASE
+
+    json, data = transform_datetimes(json), transform_datetimes(data)
+
+    url = f"{base}/v{api_version}/{endpoint}"
+
+    logger.debug(
+        'Sending a request to Ordway endpoint "%s" with the following query params: %s',
+        endpoint,
+        params,
+    )
+
+    # Ensure any changes to client attrs are reflected in headers on request.
+    session.headers.update(headers)
+
+    try:
+        response = session.request(
+            method=method, url=url, params=params, data=data, json=json
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+    except RequestException as err:
+        raise OrdwayAPIRequestException(
+            str(err), request=err.request, response=err.response
+        ) from err
+    except ValueError as err:
+        raise OrdwayAPIRequestException(
+            "Ordway returned HTTP success, but no valid JSON was present. Please report this as an issue on GitHub."
+        ) from err
+
+
 class APIBase:
     collection: str
 
-    def __init__(self, client: "OrdwayClient", staging: bool = False):
+    def __init__(self, client: "OrdwayClient", **kwargs):
         self.client = client
         self.session = client.session
-        self.staging = staging
+        self.staging = kwargs.get("staging", False)
+
+        self.ratelimit_calls = kwargs.get("calls", 2)
+        self.ratelimit_period = kwargs.get("period", 1)
+
+        self._ratelimited_request = limits(
+            calls=self.ratelimit_calls, period=self.ratelimit_period
+        )(_request)
+        self._ratelimited_request = sleep_and_retry(self._ratelimited_request)
 
     def _construct_headers(self) -> Dict[str, str]:
         """ Returns a dictionary of headers Ordway always expects for API requests. """
@@ -42,40 +99,17 @@ class APIBase:
         data: Optional[Dict[str, Any]] = None,
         json: Optional[Dict[str, Any]] = None,
     ) -> _Response:
-        if self.staging:
-            base = STAGING_ENDPOINT_BASE
-        else:
-            base = API_ENDPOINT_BASE
-
-        json, data = transform_datetimes(json), transform_datetimes(data)
-
-        url = f"{base}/v{self.client.api_version}/{endpoint}"
-
-        logger.debug(
-            'Sending a request to Ordway endpoint "%s" with the following query params: %s',
-            endpoint,
-            params,
+        return self._ratelimited_request(
+            session=self.session,
+            method=method,
+            endpoint=endpoint,
+            params=params,
+            data=data,
+            json=json,
+            api_version=self.client.api_version,
+            headers=self._construct_headers(),
+            staging=self.staging,
         )
-
-        # Ensure any changes to client attrs are reflected in headers on request.
-        self.session.headers.update(self._construct_headers())
-
-        try:
-            response = self.session.request(
-                method=method, url=url, params=params, data=data, json=json
-            )
-
-            response.raise_for_status()
-
-            return response.json()
-        except RequestException as err:
-            raise OrdwayAPIRequestException(
-                str(err), request=err.request, response=err.response
-            ) from err
-        except ValueError as err:
-            raise OrdwayAPIRequestException(
-                "Ordway returned HTTP success, but no valid JSON was present. Please report this as an issue on GitHub."
-            ) from err
 
     def _get_request(
         self, endpoint: str, params: Optional[Dict[str, str]] = None

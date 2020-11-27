@@ -18,3 +18,15 @@ def transform_datetimes(data: Any) -> Any:
             data[key] = transform_datetimes(val)
 
     return data
+
+
+def to_snake_case(s: str) -> str:
+    converted = ""
+
+    for i, c in enumerate(s):
+        if c.isupper() and i != 0:
+            converted += "_"
+
+        converted += c.lower()
+
+    return converted
