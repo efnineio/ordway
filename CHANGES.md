@@ -1,5 +1,9 @@
 # Changes
 
+## [0.5.2] - 2021-08-30
+
+- Fixed `list` and `all` methods for certain collections wherein the Ordway API results are nested under the collection name. As an example API response, `{"usages": [], "total": 0}` would've previously been `[]`.
+
 ## [0.4.0] - 2020-09-22
 
 - Added support for updating following entities:
