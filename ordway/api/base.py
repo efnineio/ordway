@@ -160,7 +160,17 @@ class ListAPIMixin(APIBase):
         )
 
         if isinstance(response_json, dict):
-            response_json = [response_json]
+            # For some endpoints, Ordway nests the results
+            # under the collection name so as to include
+            # additional metadata
+            # For example,
+            # { "usages": [], "total": 0 }
+            results = response_json.get(self.collection.lower())
+
+            if isinstance(results, list):
+                response_json = results
+            else:
+                response_json = [response_json]
 
         # Mostly for consistency's sake.
         for result in response_json:
